@@ -7,7 +7,6 @@ import numpy as np
 ################%%%%%%%% National Instruments %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 daq_dev = 'Dev1'  # use daq.getDevices to find NI card
 daq_terminal = 'Differential'  # SingleEnded OR Differential analog lines. can cause cross-talk.
-
 # Specify channel as: name , physical line, IO type, sampling rate
 # Last argument only for analog input: range of voltage,  digital output: type of signal
 # Options for range in NI: 0.10 ,0.20 ,0.50 ,1.0 ,2.0 ,5.0 ,10
@@ -75,4 +74,16 @@ tag['dir_base'] = 'D:\\Vocalization_Exploration\\LightStim_WT'
 tag['xls'] = 'D:\\Vocalization_Exploration\\LightStim_WT\\OS_record.xls'
 
 ################%%%%%%% AUTOMATIC PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%
-# Calculation logic will need translation to Python functions (more context needed)
+tag['enablestim'] = any(sum(x[-1] == 'stimuli' for x in daq_channels.values()))
+rates = [x[2] for x in daq_channels.values()]
+tag['Rates'] = np.array(rates)[~np.isnan(rates)] 
+tag['Channels'] = [x[0] for x in daq_channels.values()]
+tag['refresh_time'] = 1/pp['win_FPS']
+pp['spec_time'] = 1.81/(4*pp['res_time'])  # from spgrambw default time setting
+pp['large_axis'] = sum(sum(word in x[1] for word in {'sound', 'time series'}) for x in pp['daq_plot'])
+pp['digCh'] = [x[1] == 'digital' for x in pp['daq_plot']] 
+dig_channels = [x for x, is_digital in zip(pp['daq_plot'], pp['digCh']) if is_digital]
+pp['digCh_color'] = [x[-1] for x in dig_channels]
+
+
+
