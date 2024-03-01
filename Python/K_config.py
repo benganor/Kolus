@@ -84,6 +84,3 @@ pp['large_axis'] = sum(sum(word in x[1] for word in {'sound', 'time series'}) fo
 pp['digCh'] = [x[1] == 'digital' for x in pp['daq_plot']] 
 dig_channels = [x for x, is_digital in zip(pp['daq_plot'], pp['digCh']) if is_digital]
 pp['digCh_color'] = [x[-1] for x in dig_channels]
-
-
-
