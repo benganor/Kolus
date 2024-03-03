@@ -41,13 +41,45 @@ def kolus_initDAQ():
     SaveData = np.zeros(int(sum(tag['refresh_time'] * tag['Rates'])))
     daq.events.register_data_available_event(kolus_datasave, SaveData, tag['Rates'])
 
-# Placeholder for 'Kolus_datasave' - needs PyVISA specific data retrieval
 def kolus_datasave(instrument, data, rates):  
-    raw_data = instrument.read() 
-    # Assuming binary data, convert to meaningful values based on your device
-    processed_data = process_binary_data(raw_data, data_formats, rates) 
+    """
+    This function retrieves data from the NI device using PyVISA and processes it 
+    based on the provided rates.
 
-    # ... Save the 'processed_data' ... 
-    # Extract data from 'instrument' using PyVISA read methods
-    # ... Process and save data based on 'rates' ...
-    pass
+    Args:
+        instrument: PyVISA instrument object connected to the NI device
+        data: 
+        rates: Sampling rates for each channel
+
+    Returns:
+        None (data is assumed to be saved elsewhere)
+    """
+
+    # Assuming binary data with format: <number of samples>,<channel 1 data (16-bit signed integers)>, ...
+    # Replace with the actual format if different
+    data_format_string = "<I{ch}"
+
+    # Get number of channels from configured rates
+    num_channels = len(rates)
+    data_format_string = data_format_string.format(ch=num_channels * "h")  # 'h' for short (16-bit) signed integers
+
+    try:
+        # Read binary data from the instrument
+        raw_data = instrument.read_raw(data_format_string.encode())
+
+        # Assuming data starts from the second element (after number of samples)
+        processed_data = np.frombuffer(raw_data[1:], dtype=np.int16).reshape(-1, num_channels)  
+
+        # Separate data for each channel based on sampling rates
+        channel_data = []
+        start = 0
+        for rate in rates:
+            end = start + int(len(processed_data) / rate)
+            channel_data.append(processed_data[start:end])
+            start = end
+
+        # ... Save the 'channel_data' list (implementation depends on your saving logic) ...
+
+    except Exception as e:
+        print(f"Error reading data from NI device: {e}")
+
